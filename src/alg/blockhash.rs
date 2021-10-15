@@ -139,7 +139,11 @@ fn blockhash_fast<I: Image, B: HashBytes>(img: &I, hwidth: u32, hheight: u32) ->
 fn sum_px(chans: &[u8]) -> u32 {
     // Branch prediction should eliminate the match after a few iterations
     match chans.len() {
-        4 => if chans[3] == 0 { 255 * 3 } else { sum_px(&chans[..3]) },
+        4 => if chans[3] == 0 {
+            255 * 3
+        } else {
+            chans[..3].iter().map(|&x| x as u32).sum()
+        },
         3 => chans.iter().map(|&x| x as u32).sum(),
         2 => if chans[1] == 0 { 255 } else { chans[0] as u32 },
         1 => chans[0] as u32,
@@ -150,30 +154,33 @@ fn sum_px(chans: &[u8]) -> u32 {
 fn get_median<T: PartialOrd + Copy>(data: &[T]) -> T {
     let mut scratch = data.to_owned();
     let median = scratch.len() / 2;
-    *qselect_inplace(&mut scratch, median)
+    *qselect_inplace(&mut scratch, median).unwrap()
 }
 
 const SORT_THRESH: usize = 8;
 
-fn qselect_inplace<T: PartialOrd>(data: &mut [T], k: usize) -> &mut T {
+fn qselect_inplace<T: PartialOrd>(data: &mut [T], k: usize) -> Option<&mut T> {
     let len = data.len();
-
     assert!(k < len, "Called qselect_inplace with k = {} and data length: {}", k, len);
-
+    let mut left = 0;
+    let mut right = len - 1;
     if len < SORT_THRESH {
         data.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Less));
-        return &mut data[k];
+        return Some(&mut data[k]);
     }
 
-    let pivot_idx = partition(data);
-
-    if k == pivot_idx {
-        &mut data[pivot_idx]
-    } else if k < pivot_idx {
-        qselect_inplace(&mut data[..pivot_idx], k)
-    } else {
-        qselect_inplace(&mut data[pivot_idx + 1..], k - pivot_idx - 1)
+    while left <= right {
+        let pivot_idx = partition(data);
+        if pivot_idx == k {
+            return Some(&mut data[k])
+        } else if pivot_idx > k - 1 {
+            right = pivot_idx - 1
+        } else {
+            left = pivot_idx + 1
+        }
     }
+
+    return None
 }
 
 fn partition<T: PartialOrd>(data: &mut [T]) -> usize {
