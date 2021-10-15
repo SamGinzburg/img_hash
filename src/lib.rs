@@ -325,6 +325,11 @@ impl<B> Hasher<B> where B: HashBytes {
         let hash = self.hash_alg.hash_image(&self.ctxt, img);
         ImageHash { hash, __backcompat: () }
     }
+
+    pub fn hash_image_modified<I: Image>(&self, img: &I) -> ImageHash<B> {
+        let hash = self.hash_alg.hash_image_modified(&self.ctxt, img);
+        ImageHash { hash, __backcompat: () }
+    }
 }
 
 enum CowImage<'a, I: Image> {
