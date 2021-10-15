@@ -325,7 +325,9 @@ impl<B> Hasher<B> where B: HashBytes {
         let hash = self.hash_alg.hash_image(&self.ctxt, img);
         ImageHash { hash, __backcompat: () }
     }
+}
 
+impl<B> Hasher<B> where B: HashBytes {
     /// Calculate a hash for the given image with the configured options. Modified to hardcode func
     /// ptr for test
     pub fn hash_image_modified<I: Image>(&self, img: &I) -> ImageHash<B> {
