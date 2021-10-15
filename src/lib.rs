@@ -392,6 +392,30 @@ impl HashCtxt {
             HashVals::Bytes(img.into_vec())
         }
     }
+
+
+    fn calc_hash_vals_modified(&self, img: &GrayImage, width: u32, height: u32) -> HashVals {
+        if let Some(ref dct_ctxt) = self.dct_ctxt {
+            let img = imageops::resize(img, dct_ctxt.width(), dct_ctxt.height(),
+                                       FilterType::Lanczos3);
+
+            let img_vals  = img.into_vec();
+            let input_len = img_vals.len() * 2;
+
+            let mut vals_with_scratch = Vec::with_capacity(input_len);
+
+            // put the image values in [..width * height] and provide scratch space
+            vals_with_scratch.extend(img_vals.into_iter().map(|x| x as f32));
+            // TODO: compare with `.set_len()`
+            vals_with_scratch.resize(input_len, 0.);
+
+            let hash_vals = dct_ctxt.dct_2d(vals_with_scratch);
+            HashVals::Floats(dct_ctxt.crop_2d(hash_vals))
+        } else {
+            let img = imageops::resize(img, width, height, self.resize_filter);
+            HashVals::Bytes(img.into_vec())
+        }
+    }
 }
 
 /// A struct representing an image processed by a perceptual hash.

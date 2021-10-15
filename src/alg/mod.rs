@@ -120,6 +120,44 @@ impl HashAlg {
         }
     }
 
+    pub (crate) fn hash_image_modified<I, B>(&self, ctxt: &HashCtxt, image: &I) -> B
+    where I: Image, B: BitSet {
+        let post_gauss = ctxt.gauss_preproc(image);
+
+        let HashCtxt { width, height, .. } = *ctxt;
+
+        if *self == Blockhash {
+            return match post_gauss {
+                Borrowed(img) => blockhash::blockhash(img, width, height),
+                Owned(img) => blockhash::blockhash(&img, width, height),
+            };
+        }
+
+        let grayscale = post_gauss.to_grayscale();
+        let (resize_width, resize_height) = self.resize_dimensions(width, height);
+
+        let hash_vals = ctxt.calc_hash_vals_modified(&*grayscale, resize_width, resize_height);
+
+        let rowstride = resize_width as usize;
+
+        match (*self, hash_vals) {
+            (Mean, Floats(ref floats)) => B::from_bools(mean_hash_f32(floats)),
+            (Mean, Bytes(ref bytes)) => B::from_bools(mean_hash_u8(bytes)),
+            (Gradient, Floats(ref floats)) => B::from_bools(gradient_hash(floats, rowstride)),
+            (Gradient, Bytes(ref bytes)) => B::from_bools(gradient_hash(bytes, rowstride)),
+            (VertGradient, Floats(ref floats)) => B::from_bools(vert_gradient_hash(floats,
+                                                                                   rowstride)),
+            (VertGradient, Bytes(ref bytes)) => B::from_bools(vert_gradient_hash(bytes, rowstride)),
+            (DoubleGradient, Floats(ref floats)) => B::from_bools(double_gradient_hash(floats,
+                                                                                       rowstride)),
+            (DoubleGradient, Bytes(ref bytes)) => B::from_bools(double_gradient_hash(bytes,
+                                                                                     rowstride)),
+            (Blockhash, _) | (__Nonexhaustive, _) => unreachable!(),
+        }
+    }
+
+
+
     pub (crate) fn round_hash_size(&self, width: u32, height: u32) -> (u32, u32) {
         match *self {
             DoubleGradient => (next_multiple_of_2(width), next_multiple_of_2(height)),
