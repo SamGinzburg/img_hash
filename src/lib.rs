@@ -402,7 +402,6 @@ impl HashCtxt {
         }
     }
 
-
     fn calc_hash_vals_modified(&self, img: &GrayImage, width: u32, height: u32) -> HashVals {
         if let Some(ref dct_ctxt) = self.dct_ctxt {
             let img = imageops::resize(img, dct_ctxt.width(), dct_ctxt.height(),
@@ -421,7 +420,7 @@ impl HashCtxt {
             let hash_vals = dct_ctxt.dct_2d(vals_with_scratch);
             HashVals::Floats(dct_ctxt.crop_2d(hash_vals))
         } else {
-            let img = imageops::resize(img, width, height, self.resize_filter);
+            let img = imageops::resize(img, width, height, FilterType::Lanczos3);
             HashVals::Bytes(img.into_vec())
         }
     }
