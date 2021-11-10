@@ -55,16 +55,14 @@ impl DctCtxt {
                 .zip(scratch.chunks_mut(width)) {
                 row_dct.process_dct2(row_in, row_out);
             }
-            //pub fn transpose<T: Copy>(input: &[T], output: &mut [T], input_width: usize, input_height: usize)
-            //pub fn transpose_inplace<T: Copy>(buffer: &mut [T], scratch: &mut [T], width: usize, height: usize)
-            transpose_inplace(packed_2d, scratch, width, height);
+            transpose_inplace(packed_2d, &mut scratch[0..core::cmp::max(width, height)], width, height);
 
             for (row_in, row_out) in packed_2d.chunks_mut(height)
                 .zip(scratch.chunks_mut(height)) {
                 col_dct.process_dct2(row_in, row_out);
             }
 
-            transpose_inplace(packed_2d, scratch, width, height);
+            transpose_inplace(packed_2d, &mut scratch[0..core::cmp::max(width, height)], width, height);
         }
 
         packed_2d.truncate(trunc_len);
