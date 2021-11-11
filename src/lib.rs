@@ -371,7 +371,7 @@ impl HashCtxt {
             let mut blur_a = image.blur(sigma_a);
             let blur_b = image.blur(sigma_b);
             blur_a.diff_inplace(&blur_b);
-
+            
             CowImage::Owned(blur_a)
         } else {
             CowImage::Borrowed(image)
