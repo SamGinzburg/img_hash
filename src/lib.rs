@@ -23,7 +23,7 @@
 //! }
 //! ```
 //! [image]: https://github.com/PistonDevelopers/image
-#![deny(missing_docs)]
+//#![deny(missing_docs)]
 #![cfg_attr(feature = "nightly", feature(specialization))]
 
 extern crate base64;
@@ -57,7 +57,7 @@ mod traits;
 pub use alg::HashAlg;
 
 pub use traits::{HashBytes, Image, DiffImage};
-pub(crate) use traits::BitSet;
+pub use traits::BitSet;
 
 /// **Start here**. Configuration builder for [`Hasher`](::Hasher).
 ///

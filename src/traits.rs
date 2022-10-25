@@ -102,7 +102,7 @@ impl<I> Iterator for BoolsToBytes<I> where I: Iterator<Item=bool> {
     }
 }
 
-pub(crate) trait BitSet: HashBytes {
+pub trait BitSet: HashBytes {
     fn from_bools<I: Iterator<Item = bool>>(iter: I) -> Self where Self: Sized {
         Self::from_iter(BoolsToBytes { iter })
     }
